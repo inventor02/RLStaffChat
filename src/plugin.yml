@@ -1,0 +1,5 @@
+name: RLStaffChat
+main: me.georgepeppard.rlstaffchat.RLStaffChat
+version: 1.5.2
+description: Staff chat plugin for RLCraft, open sourced for everyone.
+author: inventor02
