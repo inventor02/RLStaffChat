@@ -1,16 +1,27 @@
 package me.georgepeppard.rlstaffchat;
 
+import io.sentry.Sentry;
+import io.sentry.SentryClient;
 import me.georgepeppard.rlstaffchat.commands.*;
 import me.georgepeppard.rlstaffchat.managers.StaffChatManager;
+import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
 
 public class RLStaffChat extends JavaPlugin {
     private static RLStaffChat instance = null;
 
+    private File configf;
+    private FileConfiguration config;
+
     @Override
     public void onEnable() {
         getLogger().info("#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#");
-        getLogger().info("Loading RLStaffChat. Please read the following notices.");
+        getLogger().info("Loading RLStaffChat v" + getDescription().getVersion() + ". Please read the following notices.");
         getLogger().info("Copyright (C) 2017 George Peppard (https://georgepeppard.me/)");
         getLogger().info("This program is free software: you can redistribute it and/or modify");
         getLogger().info("it under the terms of the GNU General Public License as published by");
@@ -27,6 +38,23 @@ public class RLStaffChat extends JavaPlugin {
         getLogger().info("#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#");
 
         instance = this; // Set the instance of the plugin in onEnable, so we use Spigot's version.
+
+        getLogger().info("Initializing configurations...");
+        try {
+            createFiles();
+        } catch(Exception e) {
+            getLogger().severe("[CFG] Houston, we have a problem (please report to the developer): " + e.getMessage());
+        }
+
+        if(getConfig().getBoolean("enable-sentry")) {
+            getLogger().info("Initializing error reporting (you're awesome!)...");
+
+            Sentry.init();
+            Sentry.getContext().addExtra("minecraft-server-version", getServer().getVersion());
+            Sentry.getContext().addExtra("plugin-version", getDescription().getVersion());
+        } else {
+            getLogger().info("Skipping error reporting initialization. Please consider enabling this in the config.yml, all we collect is the error itself, your Minecraft server version and the plugin version.");
+        }
 
         getLogger().info("Initializing StaffChatManager...");
         try {
@@ -53,7 +81,30 @@ public class RLStaffChat extends JavaPlugin {
         new StaffChatCommand(instance);
         new StaffChatReplyCommand(instance);
 
-        new AdminChatCommand(instance);
-        new AdminChatReplyCommand(instance);
+        if(getConfig().getBoolean("enable-admin-chat")) {
+            new AdminChatCommand(instance);
+            new AdminChatReplyCommand(instance);
+        }
+    }
+
+    private void createFiles() {
+        configf = new File(getDataFolder(), "config.yml");
+
+        if(!configf.exists()) {
+            getLogger().info("[CFG] config.yml not found - never fear, Mr Java is here! Creating.");
+
+            configf.getParentFile().mkdirs();
+            saveResource("config.yml", false);
+        }
+
+        config = new YamlConfiguration();
+
+        try {
+            getLogger().info("[CFG] Awesome, we found the config.yml. Loading.");
+
+            config.load(configf);
+        } catch(Exception e) {
+            getLogger().severe("[CFG] Houston, we have a problem (please report to the developer): " + e.getMessage());
+        }
     }
 }

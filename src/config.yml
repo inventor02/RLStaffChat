@@ -1,0 +1,14 @@
+#############################################################
+#                                                           #
+#                        RLStaffChat                        #
+#                      Main Config File                     #
+#                                                           #
+#############################################################
+
+# Enables or disables the separate admin chat (/a)
+# Default: true
+enable-admin-chat: true
+
+# Enables or disables anonymous error reporting
+# Default: true (you're awesome!)
+enable-sentry: true
